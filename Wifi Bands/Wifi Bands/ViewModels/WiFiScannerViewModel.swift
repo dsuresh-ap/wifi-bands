@@ -43,23 +43,21 @@ class WiFiScannerViewModel {
     private func setupPermissionObserver() {
         permissionStatus = permissionManager.authorizationStatus
 
-        // Start scanning if already authorized
-        if permissionManager.isAuthorized {
-            startScanning()
-        }
+        // Start scanning regardless - CoreWLAN will trigger permission prompt if needed
+        // This is the proper way to trigger the macOS permission dialog
+        startScanning()
     }
 
     func requestPermission() {
         permissionManager.requestPermission()
 
-        // Wait a bit and check if we should start scanning
-        Task {
-            try? await Task.sleep(for: .seconds(0.5))
-            permissionStatus = permissionManager.authorizationStatus
+        // Also attempt to start scanning, which will trigger CoreWLAN's permission prompt
+        startScanning()
 
-            if permissionManager.isAuthorized {
-                startScanning()
-            }
+        // Check permission status after a delay
+        Task {
+            try? await Task.sleep(for: .seconds(1.0))
+            permissionStatus = permissionManager.authorizationStatus
         }
     }
 
@@ -77,16 +75,15 @@ class WiFiScannerViewModel {
 
     // MARK: - Scanning Control
     func startScanning() {
-        guard permissionManager.isAuthorized else {
-            errorMessage = "Location permission is required to scan for WiFi networks."
-            return
-        }
-
+        // Check if WiFi interface is available
         guard scannerService.isInterfaceAvailable else {
             errorMessage = "No WiFi interface found. Make sure WiFi is enabled."
+            isScanning = false
             return
         }
 
+        // Don't check permission here - attempting to scan will trigger the permission prompt
+        // on macOS if permission hasn't been granted yet
         isScanning = true
         errorMessage = nil
 

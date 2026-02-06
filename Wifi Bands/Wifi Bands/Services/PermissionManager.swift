@@ -25,14 +25,21 @@ class PermissionManager: NSObject {
     }
 
     /// Requests location permission if not yet determined
+    /// On macOS, we need to actually start location services to trigger the permission prompt
     func requestPermission() {
         switch authorizationStatus {
         case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
+            // On macOS, requesting authorization alone may not show the prompt
+            // We need to actually start location services to trigger it
+            locationManager.startUpdatingLocation()
+            // Stop immediately after triggering the permission prompt
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.locationManager.stopUpdatingLocation()
+            }
         case .denied, .restricted:
             // Permission denied or restricted - user needs to go to System Settings
             break
-        case .authorizedAlways, .authorizedWhenInUse:
+        case .authorizedAlways:
             // Already authorized
             break
         @unknown default:
