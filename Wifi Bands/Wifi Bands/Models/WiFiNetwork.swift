@@ -88,6 +88,16 @@ struct WiFiNetwork: Identifiable, Codable, Hashable {
         hasher.combine(id)
     }
 
+    /// Connection quality based on SNR
+    var connectionQuality: ConnectionQuality {
+        return ConnectionQuality.from(snr: snr)
+    }
+
+    /// Noise impact severity
+    var noiseImpact: NoiseImpact {
+        return NoiseImpact.from(noise: noise)
+    }
+
     // MARK: - Equatable
     static func == (lhs: WiFiNetwork, rhs: WiFiNetwork) -> Bool {
         return lhs.id == rhs.id

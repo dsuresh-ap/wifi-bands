@@ -9,6 +9,7 @@ import SwiftUI
 
 struct NetworkRowView: View {
     let network: WiFiNetwork
+    @State private var showingDetail = false
 
     var body: some View {
         HStack(spacing: 16) {
@@ -59,11 +60,30 @@ struct NetworkRowView: View {
                 Text(network.signalQuality.label)
                     .font(.caption)
                     .foregroundColor(network.signalQuality.color)
+
+                // SNR and noise indicator
+                if let snr = network.snr {
+                    HStack(spacing: 4) {
+                        Text("SNR: \(snr) dB")
+                            .font(.caption2)
+                            .foregroundColor(network.connectionQuality.color)
+
+                        Circle()
+                            .fill(network.noiseImpact.color)
+                            .frame(width: 6, height: 6)
+                    }
+                }
             }
         }
         .padding()
         .background(Color(NSColor.controlBackgroundColor))
         .cornerRadius(8)
+        .onTapGesture {
+            showingDetail = true
+        }
+        .sheet(isPresented: $showingDetail) {
+            NetworkDetailSheet(network: network)
+        }
     }
 }
 

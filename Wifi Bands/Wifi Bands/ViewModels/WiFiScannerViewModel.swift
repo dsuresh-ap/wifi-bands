@@ -22,6 +22,7 @@ class WiFiScannerViewModel {
     // MARK: - Services
     private let scannerService = WiFiScannerService()
     private let permissionManager = PermissionManager()
+    private let analyticsService = NetworkAnalyticsService()
 
     // MARK: - Signal History
     private let signalHistory = SignalHistory()
@@ -154,5 +155,27 @@ class WiFiScannerViewModel {
 
     var currentConnectedNetwork: WiFiNetwork? {
         return scannerService.currentNetwork()
+    }
+
+    // MARK: - Analytics
+
+    /// Gets channel interference data grouped by band
+    func getChannelInterference() -> [WiFiBand: ChannelInterferenceMap] {
+        return analyticsService.analyzeChannelInterference(networks: networks)
+    }
+
+    /// Gets band utilization statistics
+    func getBandUtilization() -> [BandUtilizationReport] {
+        return analyticsService.analyzeBandUtilization(networks: networks)
+    }
+
+    /// Gets recommendations for a specific network
+    func getRecommendations(for network: WiFiNetwork) -> [NetworkRecommendation] {
+        return analyticsService.generateRecommendations(for: network, allNetworks: networks)
+    }
+
+    /// Gets top recommendations across all networks
+    func getTopRecommendations() -> [NetworkRecommendation] {
+        return analyticsService.getTopRecommendations(for: networks)
     }
 }

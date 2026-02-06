@@ -22,6 +22,11 @@ struct ContentView: View {
                     Label("Signal Chart", systemImage: "chart.xyaxis.line")
                 }
 
+            AnalyticsView()
+                .tabItem {
+                    Label("Analytics", systemImage: "chart.bar")
+                }
+
             InfoView()
                 .tabItem {
                     Label("Info", systemImage: "info.circle")
