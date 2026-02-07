@@ -19,11 +19,27 @@ class WiFiScannerViewModel {
     var hasCompletedInitialScan: Bool = false
     var errorMessage: String?
     var permissionStatus: CLAuthorizationStatus = .notDetermined
+    var currentConnectedNetwork: WiFiNetwork?
 
     // MARK: - Services
     private let scannerService = WiFiScannerService()
     private let permissionManager = PermissionManager()
     private let analyticsService = NetworkAnalyticsService()
+
+    // MARK: - Cache Structures
+    private var analyticsCache: (
+        hash: Int,
+        interference: [WiFiBand: ChannelInterferenceMap],
+        utilization: [BandUtilizationReport],
+        recommendations: [NetworkRecommendation]
+    )?
+
+    private var filteredNetworksCache: (
+        hash: Int,
+        twoGHz: [WiFiNetwork],
+        fiveGHz: [WiFiNetwork],
+        sixGHz: [WiFiNetwork]
+    )?
 
     // MARK: - Signal History
     private let signalHistory = SignalHistory()
@@ -42,6 +58,33 @@ class WiFiScannerViewModel {
     init() {
         // Observe permission changes
         setupPermissionObserver()
+    }
+
+    // MARK: - Cache Management
+    private func computeNetworkHash() -> Int {
+        // Hash based on network IDs and channels (ignores minor RSSI changes)
+        var hasher = Hasher()
+        for network in networks.sorted(by: { $0.id < $1.id }) {
+            hasher.combine(network.id)
+            hasher.combine(network.channel)
+            hasher.combine(network.band)
+        }
+        return hasher.finalize()
+    }
+
+    private func updateAnalyticsCache(
+        hash: Int,
+        interference: [WiFiBand: ChannelInterferenceMap]? = nil,
+        utilization: [BandUtilizationReport]? = nil,
+        recommendations: [NetworkRecommendation]? = nil
+    ) {
+        let current = analyticsCache
+        analyticsCache = (
+            hash: hash,
+            interference: interference ?? current?.interference ?? [:],
+            utilization: utilization ?? current?.utilization ?? [],
+            recommendations: recommendations ?? current?.recommendations ?? []
+        )
     }
 
     // MARK: - Permission Management
@@ -84,27 +127,28 @@ class WiFiScannerViewModel {
 
     // MARK: - Scanning Control
     func startScanning() {
-        // Check if WiFi interface is available
-        guard scannerService.isInterfaceAvailable else {
-            errorMessage = "No WiFi interface found. Make sure WiFi is enabled."
-            isScanning = false
-            return
-        }
-
-        // Don't check permission here - attempting to scan will trigger the permission prompt
-        // on macOS if permission hasn't been granted yet
-        isScanning = true
-        errorMessage = nil
-
-        // Start timer for regular updates
-        scanTimer = Timer.scheduledTimer(withTimeInterval: Self.uiUpdateInterval, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                await self?.performScan()
-            }
-        }
-
-        // Perform initial scan immediately
+        // Check if WiFi interface is available (now async)
         Task {
+            let isAvailable = await scannerService.isInterfaceAvailable()
+            guard isAvailable else {
+                errorMessage = "No WiFi interface found. Make sure WiFi is enabled."
+                isScanning = false
+                return
+            }
+
+            // Don't check permission here - attempting to scan will trigger the permission prompt
+            // on macOS if permission hasn't been granted yet
+            isScanning = true
+            errorMessage = nil
+
+            // Start timer for regular updates
+            scanTimer = Timer.scheduledTimer(withTimeInterval: Self.uiUpdateInterval, repeats: true) { [weak self] _ in
+                Task { @MainActor [weak self] in
+                    await self?.performScan()
+                }
+            }
+
+            // Perform initial scan immediately
             await performScan()
         }
     }
@@ -117,17 +161,19 @@ class WiFiScannerViewModel {
     }
 
     private func performScan() async {
+        let now = Date()
+
         // Check if enough time has passed for a CoreWLAN scan
-        let shouldPerformCoreScan: Bool
-        if let lastScan = lastCoreScanTime {
-            shouldPerformCoreScan = Date().timeIntervalSince(lastScan) >= Self.coreScanInterval
-        } else {
-            shouldPerformCoreScan = true
-        }
+        let shouldPerformCoreScan = lastCoreScanTime
+            .map { now.timeIntervalSince($0) >= Self.coreScanInterval }
+            ?? true
 
         // Only perform CoreWLAN scan if enough time has passed
         if shouldPerformCoreScan {
+            lastCoreScanTime = now
+
             do {
+                // This now properly runs on background actor thread
                 let scannedNetworks = try await scannerService.scanNetworks()
 
                 if !scannedNetworks.isEmpty {
@@ -191,9 +237,10 @@ class WiFiScannerViewModel {
 
                     // Mark that we've completed at least one scan
                     hasCompletedInitialScan = true
-
-                    lastCoreScanTime = Date()
                     errorMessage = nil
+
+                    // Update current connected network
+                    currentConnectedNetwork = await scannerService.currentNetwork()
                 } else if !hasCompletedInitialScan {
                     // First scan completed but found nothing - still mark as complete
                     hasCompletedInitialScan = true
@@ -207,28 +254,67 @@ class WiFiScannerViewModel {
 
     // MARK: - Network Queries
     func networks(for band: WiFiBand) -> [WiFiNetwork] {
-        return networks.filter { $0.band == band }
-            .sorted { $0.rssi > $1.rssi }
+        let currentHash = computeNetworkHash()
+
+        if let cache = filteredNetworksCache, cache.hash == currentHash {
+            switch band {
+            case .twoPointFour: return cache.twoGHz
+            case .five: return cache.fiveGHz
+            case .six: return cache.sixGHz
+            case .unknown: return []
+            }
+        }
+
+        // Compute all bands at once
+        let twoGHz = networks.filter { $0.band == .twoPointFour }.sorted { $0.rssi > $1.rssi }
+        let fiveGHz = networks.filter { $0.band == .five }.sorted { $0.rssi > $1.rssi }
+        let sixGHz = networks.filter { $0.band == .six }.sorted { $0.rssi > $1.rssi }
+
+        filteredNetworksCache = (currentHash, twoGHz, fiveGHz, sixGHz)
+
+        switch band {
+        case .twoPointFour: return twoGHz
+        case .five: return fiveGHz
+        case .six: return sixGHz
+        case .unknown: return []
+        }
+    }
+
+    var networksSortedBySignal: [WiFiNetwork] {
+        networks.sorted { $0.rssi > $1.rssi }
     }
 
     func signalHistoryPoints(for networkId: String) -> [SignalHistoryPoint] {
         return signalHistory.points(for: networkId)
     }
 
-    var currentConnectedNetwork: WiFiNetwork? {
-        return scannerService.currentNetwork()
-    }
 
     // MARK: - Analytics
 
-    /// Gets channel interference data grouped by band
+    /// Gets channel interference data grouped by band (cached)
     func getChannelInterference() -> [WiFiBand: ChannelInterferenceMap] {
-        return analyticsService.analyzeChannelInterference(networks: networks)
+        let currentHash = computeNetworkHash()
+
+        if let cache = analyticsCache, cache.hash == currentHash {
+            return cache.interference
+        }
+
+        let interference = analyticsService.analyzeChannelInterference(networks: networks)
+        updateAnalyticsCache(hash: currentHash, interference: interference)
+        return interference
     }
 
-    /// Gets band utilization statistics
+    /// Gets band utilization statistics (cached)
     func getBandUtilization() -> [BandUtilizationReport] {
-        return analyticsService.analyzeBandUtilization(networks: networks)
+        let currentHash = computeNetworkHash()
+
+        if let cache = analyticsCache, cache.hash == currentHash {
+            return cache.utilization
+        }
+
+        let utilization = analyticsService.analyzeBandUtilization(networks: networks)
+        updateAnalyticsCache(hash: currentHash, utilization: utilization)
+        return utilization
     }
 
     /// Gets recommendations for a specific network
@@ -236,8 +322,16 @@ class WiFiScannerViewModel {
         return analyticsService.generateRecommendations(for: network, allNetworks: networks)
     }
 
-    /// Gets top recommendations across all networks
+    /// Gets top recommendations across all networks (cached)
     func getTopRecommendations() -> [NetworkRecommendation] {
-        return analyticsService.getTopRecommendations(for: networks)
+        let currentHash = computeNetworkHash()
+
+        if let cache = analyticsCache, cache.hash == currentHash {
+            return cache.recommendations
+        }
+
+        let recommendations = analyticsService.getTopRecommendations(for: networks)
+        updateAnalyticsCache(hash: currentHash, recommendations: recommendations)
+        return recommendations
     }
 }

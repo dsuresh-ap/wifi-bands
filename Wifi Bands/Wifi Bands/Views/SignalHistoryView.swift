@@ -51,7 +51,7 @@ struct SignalHistoryView: View {
                 VStack(spacing: 16) {
                     // Network selector
                     NetworkSelectorView(
-                        networks: viewModel.networks,
+                        viewModel: viewModel,
                         selectedNetworks: $selectedNetworks
                     )
                     .padding(.horizontal)

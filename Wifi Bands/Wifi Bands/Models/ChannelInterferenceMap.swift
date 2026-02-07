@@ -12,6 +12,12 @@ struct ChannelInterferenceMap {
     let channelCounts: [Int: Int]  // Channel → network count
     let band: WiFiBand
 
+    /// Pre-sorted channels for efficient rendering
+    var sortedChannels: [(channel: Int, count: Int)] {
+        channelCounts.sorted { $0.key < $1.key }
+            .map { (channel: $0.key, count: $0.value) }
+    }
+
     /// The most congested channel in this band
     var mostCongestedChannel: Int? {
         return channelCounts.max(by: { $0.value < $1.value })?.key

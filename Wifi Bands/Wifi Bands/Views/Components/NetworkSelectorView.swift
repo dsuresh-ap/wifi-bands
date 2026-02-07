@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct NetworkSelectorView: View {
-    let networks: [WiFiNetwork]
+    let viewModel: WiFiScannerViewModel
     @Binding var selectedNetworks: Set<String>
 
     private let maxSelection = 5
@@ -32,7 +32,8 @@ struct NetworkSelectorView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(networks.sorted { $0.rssi > $1.rssi }) { network in
+                    // Use cached sorted property instead of sorting on every render
+                    ForEach(viewModel.networksSortedBySignal) { network in
                         networkButton(for: network)
                     }
                 }
@@ -98,31 +99,10 @@ struct NetworkSelectorView: View {
 
 #Preview {
     @Previewable @State var selected: Set<String> = []
+    let viewModel = WiFiScannerViewModel()
 
     NetworkSelectorView(
-        networks: [
-            WiFiNetwork(
-                ssid: "Home Network",
-                bssid: "00:11:22:33:44:55",
-                rssi: -45,
-                channel: 36,
-                security: "WPA2 Personal"
-            ),
-            WiFiNetwork(
-                ssid: "Office WiFi",
-                bssid: "AA:BB:CC:DD:EE:FF",
-                rssi: -72,
-                channel: 6,
-                security: "WPA3 Personal"
-            ),
-            WiFiNetwork(
-                ssid: "Guest Network",
-                bssid: "11:22:33:44:55:66",
-                rssi: -88,
-                channel: 149,
-                security: "Open"
-            )
-        ],
+        viewModel: viewModel,
         selectedNetworks: $selected
     )
     .padding()

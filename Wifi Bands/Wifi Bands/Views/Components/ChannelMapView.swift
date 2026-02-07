@@ -65,12 +65,13 @@ struct BandChannelChart: View {
                     .padding(.vertical, 8)
             } else {
                 VStack(alignment: .leading, spacing: 4) {
-                    ForEach(sortedChannels, id: \.0) { channel, count in
+                    // Use pre-sorted property instead of sorting on every render
+                    ForEach(interferenceMap.sortedChannels, id: \.channel) { item in
                         ChannelBar(
-                            channel: channel,
-                            count: count,
+                            channel: item.channel,
+                            count: item.count,
                             maxCount: maxCount,
-                            congestionLevel: interferenceMap.congestionLevel(for: channel)
+                            congestionLevel: interferenceMap.congestionLevel(for: item.channel)
                         )
                     }
                 }
@@ -92,10 +93,6 @@ struct BandChannelChart: View {
                 .padding(.top, 4)
             }
         }
-    }
-
-    private var sortedChannels: [(Int, Int)] {
-        interferenceMap.channelCounts.sorted { $0.key < $1.key }
     }
 
     private var maxCount: Int {

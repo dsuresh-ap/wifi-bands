@@ -13,21 +13,28 @@ struct SignalLineChart: View {
     let viewModel: WiFiScannerViewModel
 
     var body: some View {
+        // Pre-compute network lookup dictionary for O(1) access
+        let networkLookup = Dictionary(
+            uniqueKeysWithValues: viewModel.networks.map { ($0.id, $0) }
+        )
+
         VStack(alignment: .leading, spacing: 12) {
             // Chart
             Chart {
                 ForEach(Array(selectedNetworks), id: \.self) { networkId in
                     let points = viewModel.signalHistoryPoints(for: networkId)
-                    let network = viewModel.networks.first { $0.id == networkId }
 
-                    ForEach(points) { point in
-                        LineMark(
-                            x: .value("Time", point.timestamp),
-                            y: .value("Signal", point.rssi)
-                        )
-                        .foregroundStyle(by: .value("Network", network?.displayName ?? "Unknown"))
-                        .interpolationMethod(.catmullRom)
-                        .lineStyle(StrokeStyle(lineWidth: 2))
+                    // Use dictionary lookup instead of linear search
+                    if let network = networkLookup[networkId] {
+                        ForEach(points) { point in
+                            LineMark(
+                                x: .value("Time", point.timestamp),
+                                y: .value("Signal", point.rssi)
+                            )
+                            .foregroundStyle(by: .value("Network", network.displayName))
+                            .interpolationMethod(.catmullRom)
+                            .lineStyle(StrokeStyle(lineWidth: 2))
+                        }
                     }
                 }
             }
@@ -53,11 +60,11 @@ struct SignalLineChart: View {
             .frame(height: 400)
 
             // Legend with current values
-            legendView
+            legendView(networkLookup: networkLookup)
         }
     }
 
-    private var legendView: some View {
+    private func legendView(networkLookup: [String: WiFiNetwork]) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Current Signal Strength")
                 .font(.caption)
@@ -66,7 +73,8 @@ struct SignalLineChart: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(Array(selectedNetworks), id: \.self) { networkId in
-                        if let network = viewModel.networks.first(where: { $0.id == networkId }) {
+                        // Use dictionary lookup instead of linear search
+                        if let network = networkLookup[networkId] {
                             HStack(spacing: 8) {
                                 Circle()
                                     .fill(network.signalQuality.color)
