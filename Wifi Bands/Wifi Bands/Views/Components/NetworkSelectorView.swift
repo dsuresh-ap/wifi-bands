@@ -58,10 +58,18 @@ struct NetworkSelectorView: View {
                     .fill(network.signalQuality.color)
                     .frame(width: 8, height: 8)
 
-                // Network name
-                Text(network.displayName)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                // Network info
+                VStack(alignment: .leading, spacing: 2) {
+                    // Network name
+                    Text(network.displayName)
+                        .font(.caption)
+                        .fontWeight(.medium)
+
+                    // BSSID
+                    Text(network.displayBSSID)
+                        .font(.system(size: 9))
+                        .foregroundColor(.secondary)
+                }
 
                 // RSSI value
                 Text("\(network.rssi) dBm")

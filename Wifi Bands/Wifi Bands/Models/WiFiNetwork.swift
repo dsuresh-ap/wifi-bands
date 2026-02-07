@@ -28,7 +28,7 @@ struct WiFiNetwork: Identifiable, Hashable {
     let firstSeen: Date?                // Timestamp of first detection
 
     /// Initializes a WiFiNetwork with all properties
-    init(
+    nonisolated init(
         id: String? = nil,
         ssid: String?,
         bssid: String?,

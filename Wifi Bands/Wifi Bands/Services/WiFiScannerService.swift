@@ -161,6 +161,10 @@ actor WiFiScannerService {
             return "WPA3 Enterprise"
         case .wpa3Transition:
             return "WPA2/WPA3 Transition"
+        case .OWE:
+            return "OWE"
+        case .oweTransition:
+            return "OWE Transition"
         case .unknown:
             return "Unknown"
         @unknown default:

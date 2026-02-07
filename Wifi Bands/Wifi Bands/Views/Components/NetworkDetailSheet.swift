@@ -10,10 +10,12 @@ import SwiftUI
 /// Detailed sheet view for a specific network
 struct NetworkDetailSheet: View {
     @Environment(WiFiScannerViewModel.self) private var viewModel
+    @Environment(\.dismiss) private var dismiss
     let network: WiFiNetwork
 
     var body: some View {
-        VStack(spacing: 24) {
+        ScrollView {
+            VStack(spacing: 24) {
             // Header
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -41,6 +43,15 @@ struct NetworkDetailSheet: View {
                 }
 
                 Spacer()
+
+                Button(action: { dismiss() }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.title2)
+                        .foregroundStyle(.secondary)
+                        .symbolRenderingMode(.hierarchical)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut(.cancelAction)
             }
 
             // Large signal meter
@@ -237,11 +248,11 @@ struct NetworkDetailSheet: View {
                     }
                 }
             }
-
-            Spacer()
         }
         .padding(24)
-        .frame(width: 700, height: 900)
+        .frame(width: 700)
+        }
+        .frame(height: 900)
     }
 
     private var gridColumns: [GridItem] {

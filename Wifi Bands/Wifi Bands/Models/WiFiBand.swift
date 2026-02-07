@@ -17,7 +17,7 @@ enum WiFiBand: String, Codable, CaseIterable {
     /// Determines the WiFi band based on channel number
     /// - Parameter channel: The channel number
     /// - Returns: The corresponding WiFiBand
-    static func from(channel: Int) -> WiFiBand {
+    nonisolated static func from(channel: Int) -> WiFiBand {
         switch channel {
         case 1...14:
             return .twoPointFour
