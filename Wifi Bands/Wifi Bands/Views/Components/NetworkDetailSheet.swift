@@ -21,10 +21,22 @@ struct NetworkDetailSheet: View {
                         .font(.title)
                         .fontWeight(.bold)
 
-                    if let bssid = network.bssid {
-                        Text(bssid)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                    HStack(spacing: 8) {
+                        if let bssid = network.bssid {
+                            Text(bssid)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        if let vendor = network.vendor {
+                            Text(vendor)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color.accentColor.opacity(0.1))
+                                .cornerRadius(4)
+                        }
                     }
                 }
 
@@ -39,8 +51,9 @@ struct NetworkDetailSheet: View {
             .scaleEffect(1.5)
             .frame(height: 80)
 
-            // Metrics grid
-            LazyVGrid(columns: gridColumns, spacing: 16) {
+            // SECTION 1: Signal Metrics
+            SectionHeader(title: "Signal Metrics", icon: "waveform")
+            LazyVGrid(columns: gridColumns, spacing: 12) {
                 MetricCard(
                     title: "Signal Strength",
                     value: "\(network.rssi) dBm",
@@ -63,7 +76,11 @@ struct NetworkDetailSheet: View {
                     icon: "speaker.wave.3",
                     color: network.noiseImpact.color
                 )
+            }
 
+            // SECTION 2: Channel Information
+            SectionHeader(title: "Channel Information", icon: "antenna.radiowaves.left.and.right")
+            LazyVGrid(columns: gridColumns, spacing: 12) {
                 MetricCard(
                     title: "Channel",
                     value: "\(network.channel)",
@@ -79,11 +96,87 @@ struct NetworkDetailSheet: View {
                 )
 
                 MetricCard(
+                    title: "Width",
+                    value: network.channelWidthDescription,
+                    icon: "arrow.left.and.right",
+                    color: .cyan
+                )
+
+                if let countryCode = network.countryCode {
+                    MetricCard(
+                        title: "Country",
+                        value: countryCode,
+                        icon: "globe",
+                        color: .indigo
+                    )
+                }
+            }
+
+            // SECTION 3: Network Configuration
+            SectionHeader(title: "Configuration", icon: "gearshape")
+            LazyVGrid(columns: gridColumns, spacing: 12) {
+                MetricCard(
                     title: "Security",
                     value: network.security,
                     icon: network.isSecured ? "lock.fill" : "lock.open",
                     color: network.isSecured ? .green : .red
                 )
+
+                if let beaconInterval = network.beaconIntervalDescription {
+                    MetricCard(
+                        title: "Beacon Interval",
+                        value: beaconInterval,
+                        icon: "timer",
+                        color: .orange
+                    )
+                }
+
+                if let maxRate = network.maxSupportedRate {
+                    MetricCard(
+                        title: "Max Rate",
+                        value: String(format: "%.1f Mbps", maxRate),
+                        icon: "speedometer",
+                        color: .green
+                    )
+                }
+
+                if let minRate = network.minSupportedRate {
+                    MetricCard(
+                        title: "Min Rate",
+                        value: String(format: "%.1f Mbps", minRate),
+                        icon: "tortoise",
+                        color: .gray
+                    )
+                }
+            }
+
+            // SECTION 4: Tracking Information
+            SectionHeader(title: "Tracking", icon: "clock")
+            LazyVGrid(columns: gridColumns, spacing: 12) {
+                if let firstSeen = network.firstSeen {
+                    MetricCard(
+                        title: "First Seen",
+                        value: formatTimestamp(firstSeen),
+                        icon: "eye",
+                        color: .teal
+                    )
+                }
+
+                MetricCard(
+                    title: "Last Seen",
+                    value: formatTimestamp(network.lastSeen),
+                    icon: "clock.arrow.circlepath",
+                    color: .teal
+                )
+
+                if let duration = network.visibilityDuration {
+                    MetricCard(
+                        title: "Visible For",
+                        value: formatDuration(duration),
+                        icon: "hourglass",
+                        color: .mint
+                    )
+                }
             }
 
             // Connection quality
@@ -148,7 +241,7 @@ struct NetworkDetailSheet: View {
             Spacer()
         }
         .padding(24)
-        .frame(width: 600, height: 800)
+        .frame(width: 700, height: 900)
     }
 
     private var gridColumns: [GridItem] {
@@ -157,6 +250,36 @@ struct NetworkDetailSheet: View {
             GridItem(.flexible(), spacing: 16),
             GridItem(.flexible(), spacing: 16)
         ]
+    }
+
+    private func formatTimestamp(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .medium
+        formatter.dateStyle = .none
+        return formatter.string(from: date)
+    }
+
+    private func formatDuration(_ interval: TimeInterval) -> String {
+        let minutes = Int(interval) / 60
+        let seconds = Int(interval) % 60
+        return minutes > 0 ? "\(minutes)m \(seconds)s" : "\(seconds)s"
+    }
+}
+
+/// Section header for organizing metrics
+struct SectionHeader: View {
+    let title: String
+    let icon: String
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .foregroundColor(.secondary)
+            Text(title)
+                .font(.headline)
+                .fontWeight(.semibold)
+        }
+        .padding(.top, 8)
     }
 }
 

@@ -27,8 +27,8 @@ enum WiFiScanError: Error, LocalizedError {
 }
 
 /// Service class that wraps CoreWLAN framework for WiFi scanning
-@MainActor
-class WiFiScannerService {
+/// Runs on background thread to avoid blocking main thread during hardware scans
+actor WiFiScannerService {
     /// Minimum interval between scans enforced by CoreWLAN hardware
     private static let minimumScanInterval: TimeInterval = 3.0
 
@@ -84,13 +84,18 @@ class WiFiScannerService {
 
         let noise = interface.noiseMeasurement()
 
+        // Note: beaconInterval, countryCode, and supportedRates are not available
+        // from CWInterface, only from CWNetwork objects from scans
+        let channelWidth = interface.wlanChannel()?.channelWidth
+
         return WiFiNetwork(
             ssid: ssid,
             bssid: interface.bssid(),
             rssi: interface.rssiValue(),
             channel: interface.wlanChannel()?.channelNumber ?? 0,
             security: securityString(from: interface.security()),
-            noise: noise
+            noise: noise,
+            channelWidth: channelWidth
         )
     }
 
@@ -102,6 +107,14 @@ class WiFiScannerService {
         let channel = cwNetwork.wlanChannel?.channelNumber ?? 0
         let security = securityDescription(from: cwNetwork)
 
+        // Extract additional properties
+        let beaconInterval = cwNetwork.beaconInterval
+        let countryCode = cwNetwork.countryCode
+        let channelWidth = cwNetwork.wlanChannel?.channelWidth
+
+        // Note: supportedRates is not directly available via CoreWLAN public API
+        // It would require parsing information elements which is out of scope
+
         // Create WiFiNetwork model
         return WiFiNetwork(
             ssid: ssid,
@@ -109,7 +122,11 @@ class WiFiScannerService {
             rssi: rssi,
             channel: channel,
             security: security,
-            noise: noise
+            noise: noise,
+            beaconInterval: beaconInterval,
+            countryCode: countryCode,
+            channelWidth: channelWidth,
+            supportedRates: nil
         )
     }
 
@@ -159,7 +176,8 @@ class WiFiScannerService {
     }
 
     /// Checks if WiFi interface is available
-    var isInterfaceAvailable: Bool {
+    /// Must be called with await since this is an actor
+    func isInterfaceAvailable() -> Bool {
         return wifiClient.interface() != nil
     }
 }

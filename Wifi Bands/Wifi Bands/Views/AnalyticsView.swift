@@ -27,7 +27,9 @@ struct AnalyticsView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
 
-                if viewModel.networks.isEmpty {
+                if viewModel.isInitialLoading {
+                    initialLoadingView
+                } else if viewModel.networks.isEmpty {
                     // Empty state
                     VStack(spacing: 16) {
                         Image(systemName: "chart.bar.xaxis")
@@ -95,6 +97,26 @@ struct AnalyticsView: View {
             GridItem(.flexible(), spacing: 16),
             GridItem(.flexible(), spacing: 16)
         ]
+    }
+
+    private var initialLoadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .controlSize(.large)
+                .scaleEffect(1.5)
+
+            VStack(spacing: 8) {
+                Text("Loading Analytics")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Text("Analyzing WiFi environment...")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.top, 60)
     }
 }
 

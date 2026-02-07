@@ -6,9 +6,10 @@
 //
 
 import Foundation
+import CoreWLAN
 
 /// Represents a WiFi network with all its properties
-struct WiFiNetwork: Identifiable, Codable, Hashable {
+struct WiFiNetwork: Identifiable, Hashable {
     let id: String
     let ssid: String?
     let bssid: String?
@@ -19,6 +20,13 @@ struct WiFiNetwork: Identifiable, Codable, Hashable {
     let noise: Int
     let lastSeen: Date
 
+    // MARK: - Additional Properties
+    let beaconInterval: Int?           // Milliseconds between beacons
+    let countryCode: String?            // ISO 3166-1 country code
+    let channelWidth: CWChannelWidth?   // Channel bandwidth (not codable, for internal use)
+    let supportedRates: [Int]?          // Array of rates in 500 kbps units
+    let firstSeen: Date?                // Timestamp of first detection
+
     /// Initializes a WiFiNetwork with all properties
     init(
         id: String? = nil,
@@ -28,11 +36,17 @@ struct WiFiNetwork: Identifiable, Codable, Hashable {
         channel: Int,
         security: String,
         noise: Int = 0,
-        lastSeen: Date = Date()
+        lastSeen: Date = Date(),
+        beaconInterval: Int? = nil,
+        countryCode: String? = nil,
+        channelWidth: CWChannelWidth? = nil,
+        supportedRates: [Int]? = nil,
+        firstSeen: Date? = nil
     ) {
-        // Use BSSID as ID if available, otherwise generate UUID
+        // Use BSSID + channel as ID to handle APs on multiple channels
+        // This prevents duplicate ID errors in SwiftUI ForEach
         if let bssid = bssid, !bssid.isEmpty {
-            self.id = bssid
+            self.id = "\(bssid)_ch\(channel)"
         } else if let id = id {
             self.id = id
         } else {
@@ -47,6 +61,11 @@ struct WiFiNetwork: Identifiable, Codable, Hashable {
         self.security = security
         self.noise = noise
         self.lastSeen = lastSeen
+        self.beaconInterval = beaconInterval
+        self.countryCode = countryCode
+        self.channelWidth = channelWidth
+        self.supportedRates = supportedRates
+        self.firstSeen = firstSeen
     }
 
     /// Display name for the network (handles hidden networks)
@@ -81,6 +100,50 @@ struct WiFiNetwork: Identifiable, Codable, Hashable {
     /// Formatted channel string with band
     var channelDescription: String {
         return "Ch \(channel) (\(band.rawValue))"
+    }
+
+    // MARK: - Additional Computed Properties
+
+    /// Beacon interval with units
+    var beaconIntervalDescription: String? {
+        guard let interval = beaconInterval else { return nil }
+        return "\(interval) ms"
+    }
+
+    /// Channel width formatted
+    var channelWidthDescription: String {
+        guard let width = channelWidth else { return "Unknown" }
+        switch width {
+        case .width20MHz: return "20 MHz"
+        case .width40MHz: return "40 MHz"
+        case .width80MHz: return "80 MHz"
+        case .width160MHz: return "160 MHz"
+        case .widthUnknown: return "Unknown"
+        @unknown default: return "Unknown"
+        }
+    }
+
+    /// Max supported rate in Mbps
+    var maxSupportedRate: Double? {
+        guard let rates = supportedRates, !rates.isEmpty else { return nil }
+        return Double(rates.max() ?? 0) * 0.5  // Convert from 500 kbps units
+    }
+
+    /// Min supported rate in Mbps
+    var minSupportedRate: Double? {
+        guard let rates = supportedRates, !rates.isEmpty else { return nil }
+        return Double(rates.min() ?? 0) * 0.5
+    }
+
+    /// Duration network has been visible
+    var visibilityDuration: TimeInterval? {
+        guard let firstSeen = firstSeen else { return nil }
+        return lastSeen.timeIntervalSince(firstSeen)
+    }
+
+    /// Vendor from BSSID lookup
+    var vendor: String? {
+        return VendorLookup.vendor(from: bssid)
     }
 
     // MARK: - Hashable

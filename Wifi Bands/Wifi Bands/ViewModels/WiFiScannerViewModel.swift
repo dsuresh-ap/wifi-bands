@@ -16,6 +16,7 @@ class WiFiScannerViewModel {
     // MARK: - Published State
     var networks: [WiFiNetwork] = []
     var isScanning: Bool = false
+    var hasCompletedInitialScan: Bool = false
     var errorMessage: String?
     var permissionStatus: CLAuthorizationStatus = .notDetermined
 
@@ -26,6 +27,9 @@ class WiFiScannerViewModel {
 
     // MARK: - Signal History
     private let signalHistory = SignalHistory()
+
+    // MARK: - Network Tracking
+    private var firstSeenTimes: [String: Date] = [:]
 
     // MARK: - Timer
     private var scanTimer: Timer?
@@ -74,6 +78,10 @@ class WiFiScannerViewModel {
         return permissionManager.isAuthorized
     }
 
+    var isInitialLoading: Bool {
+        return isScanning && !hasCompletedInitialScan
+    }
+
     // MARK: - Scanning Control
     func startScanning() {
         // Check if WiFi interface is available
@@ -103,6 +111,7 @@ class WiFiScannerViewModel {
 
     func stopScanning() {
         isScanning = false
+        hasCompletedInitialScan = false
         scanTimer?.invalidate()
         scanTimer = nil
     }
@@ -122,7 +131,48 @@ class WiFiScannerViewModel {
                 let scannedNetworks = try await scannerService.scanNetworks()
 
                 if !scannedNetworks.isEmpty {
-                    networks = scannedNetworks
+                    // Track first seen times and create enhanced networks
+                    var enhancedNetworks: [WiFiNetwork] = []
+
+                    for network in scannedNetworks {
+                        // Record first seen time if new
+                        if firstSeenTimes[network.id] == nil {
+                            firstSeenTimes[network.id] = Date()
+                        }
+
+                        // Create network with firstSeen populated
+                        let enhancedNetwork = WiFiNetwork(
+                            id: network.id,
+                            ssid: network.ssid,
+                            bssid: network.bssid,
+                            rssi: network.rssi,
+                            channel: network.channel,
+                            security: network.security,
+                            noise: network.noise,
+                            lastSeen: network.lastSeen,
+                            beaconInterval: network.beaconInterval,
+                            countryCode: network.countryCode,
+                            channelWidth: network.channelWidth,
+                            supportedRates: network.supportedRates,
+                            firstSeen: firstSeenTimes[network.id]
+                        )
+                        enhancedNetworks.append(enhancedNetwork)
+                    }
+
+                    // Deduplicate networks by ID, keeping the one with strongest signal
+                    var deduplicatedNetworks: [String: WiFiNetwork] = [:]
+                    for network in enhancedNetworks {
+                        if let existing = deduplicatedNetworks[network.id] {
+                            // Keep the network with stronger signal
+                            if network.rssi > existing.rssi {
+                                deduplicatedNetworks[network.id] = network
+                            }
+                        } else {
+                            deduplicatedNetworks[network.id] = network
+                        }
+                    }
+
+                    networks = Array(deduplicatedNetworks.values)
 
                     // Update signal history for all networks
                     for network in networks {
@@ -133,8 +183,20 @@ class WiFiScannerViewModel {
                     let activeNetworkIds = Set(networks.map { $0.id })
                     signalHistory.cleanup(keepingOnly: activeNetworkIds)
 
+                    // Cleanup first seen times for networks not seen in last 5 minutes
+                    let fiveMinutesAgo = Date().addingTimeInterval(-300)
+                    firstSeenTimes = firstSeenTimes.filter { (key, firstSeenTime) in
+                        activeNetworkIds.contains(key) || firstSeenTime > fiveMinutesAgo
+                    }
+
+                    // Mark that we've completed at least one scan
+                    hasCompletedInitialScan = true
+
                     lastCoreScanTime = Date()
                     errorMessage = nil
+                } else if !hasCompletedInitialScan {
+                    // First scan completed but found nothing - still mark as complete
+                    hasCompletedInitialScan = true
                 }
             } catch {
                 errorMessage = error.localizedDescription

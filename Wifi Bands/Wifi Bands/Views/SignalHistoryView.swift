@@ -39,6 +39,8 @@ struct SignalHistoryView: View {
             // Content
             if !viewModel.isPermissionGranted {
                 PermissionDeniedView()
+            } else if viewModel.isInitialLoading {
+                initialLoadingView
             } else if viewModel.networks.isEmpty {
                 ContentUnavailableView(
                     "No Networks to Chart",
@@ -78,6 +80,25 @@ struct SignalHistoryView: View {
                 viewModel.startScanning()
             }
         }
+    }
+
+    private var initialLoadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .controlSize(.large)
+                .scaleEffect(1.5)
+
+            VStack(spacing: 8) {
+                Text("Initializing Signal Monitor")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Text("Preparing to track WiFi signal strength...")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 

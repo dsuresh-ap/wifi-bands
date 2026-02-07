@@ -39,6 +39,8 @@ struct NetworksListView: View {
             // Content
             if !viewModel.isPermissionGranted {
                 PermissionDeniedView()
+            } else if viewModel.isInitialLoading {
+                initialLoadingView
             } else if let errorMessage = viewModel.errorMessage {
                 ContentUnavailableView(
                     "Unable to Scan",
@@ -90,6 +92,25 @@ struct NetworksListView: View {
             }
             .padding(.vertical)
         }
+    }
+
+    private var initialLoadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .controlSize(.large)
+                .scaleEffect(1.5)
+
+            VStack(spacing: 8) {
+                Text("Scanning for Networks")
+                    .font(.title2)
+                    .fontWeight(.semibold)
+
+                Text("Searching for available WiFi networks...")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
