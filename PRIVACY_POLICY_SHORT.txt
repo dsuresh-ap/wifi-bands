@@ -1,0 +1,14 @@
+WiFi Bands Privacy Policy
+
+WiFi Bands accesses WiFi network information (SSIDs, signal strength, channels, security settings) to display network analytics. The app requires Location Services permission as mandated by macOS for WiFi scanning.
+
+All data is processed locally on your device. We do not collect, store, or transmit any data to external servers. No personal information is collected. No data is shared with third parties. The app does not use analytics or tracking services.
+
+Signal history is stored temporarily in memory for visualization and is automatically cleared when networks disappear or when you close the app.
+
+You can control permissions in System Preferences > Security & Privacy > Privacy > Location Services.
+
+For questions or concerns, please visit: https://github.com/dsuresh-ap/wifi-bands
+Full privacy policy: https://github.com/dsuresh-ap/wifi-bands/blob/main/PRIVACY_POLICY.md
+
+Last Updated: February 7, 2026
