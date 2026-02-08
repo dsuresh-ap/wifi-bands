@@ -1,0 +1,178 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with subtle gradient -->
+  <defs>
+    <!-- Gradients for Liquid Glass effect -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0f0f1e;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- 2.4 GHz Band - Warm gradient (Orange/Red) -->
+    <linearGradient id="band24" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b35;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#ff8c42;stop-opacity:0.7" />
+    </linearGradient>
+
+    <!-- 5 GHz Band - Cool gradient (Blue/Purple) -->
+    <linearGradient id="band5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a90e2;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#5c6bc0;stop-opacity:0.7" />
+    </linearGradient>
+
+    <!-- 6 GHz Band - Modern gradient (Purple/Pink) -->
+    <linearGradient id="band6" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#9c27b0;stop-opacity:0.9" />
+      <stop offset="100%" style="stop-color:#e91e63;stop-opacity:0.7" />
+    </linearGradient>
+
+    <!-- Glass overlay gradient -->
+    <linearGradient id="glassOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.2" />
+      <stop offset="50%" style="stop-color:#ffffff;stop-opacity:0.05" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0" />
+    </linearGradient>
+
+    <!-- Glow effects -->
+    <filter id="glow24">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="glow5">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="glow6">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bgGradient)"/>
+
+  <!-- Central hub (router/source) -->
+  <circle cx="512" cy="512" r="40" fill="#ffffff" opacity="0.95"/>
+  <circle cx="512" cy="512" r="28" fill="url(#bgGradient)"/>
+
+  <!-- 2.4 GHz Band - Outermost, widest waves -->
+  <g filter="url(#glow24)">
+    <!-- Outer wave -->
+    <path d="M 512 182 A 330 330 0 0 1 842 512"
+          stroke="url(#band24)"
+          stroke-width="28"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.8"/>
+
+    <!-- Middle wave -->
+    <path d="M 512 242 A 270 270 0 0 1 782 512"
+          stroke="url(#band24)"
+          stroke-width="24"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"/>
+
+    <!-- Inner wave -->
+    <path d="M 512 302 A 210 210 0 0 1 722 512"
+          stroke="url(#band24)"
+          stroke-width="20"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.9"/>
+  </g>
+
+  <!-- 5 GHz Band - Middle frequency -->
+  <g filter="url(#glow5)">
+    <!-- Outer wave -->
+    <path d="M 512 842 A 330 330 0 0 1 182 512"
+          stroke="url(#band5)"
+          stroke-width="28"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.8"/>
+
+    <!-- Middle wave -->
+    <path d="M 512 782 A 270 270 0 0 1 242 512"
+          stroke="url(#band5)"
+          stroke-width="24"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"/>
+
+    <!-- Inner wave -->
+    <path d="M 512 722 A 210 210 0 0 1 302 512"
+          stroke="url(#band5)"
+          stroke-width="20"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.9"/>
+  </g>
+
+  <!-- 6 GHz Band - Newest, modern frequency -->
+  <g filter="url(#glow6)">
+    <!-- Outer wave - Bottom right -->
+    <path d="M 842 512 A 330 330 0 0 1 512 842"
+          stroke="url(#band6)"
+          stroke-width="28"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.8"/>
+
+    <!-- Middle wave -->
+    <path d="M 782 512 A 270 270 0 0 1 512 782"
+          stroke="url(#band6)"
+          stroke-width="24"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.85"/>
+
+    <!-- Inner wave -->
+    <path d="M 722 512 A 210 210 0 0 1 512 722"
+          stroke="url(#band6)"
+          stroke-width="20"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.9"/>
+  </g>
+
+  <!-- Additional quarter wave in top-left (completing the pattern) -->
+  <g opacity="0.6">
+    <path d="M 182 512 A 330 330 0 0 1 512 182"
+          stroke="#7c4dff"
+          stroke-width="28"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.7"/>
+
+    <path d="M 242 512 A 270 270 0 0 1 512 242"
+          stroke="#7c4dff"
+          stroke-width="24"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.75"/>
+
+    <path d="M 302 512 A 210 210 0 0 1 512 302"
+          stroke="#7c4dff"
+          stroke-width="20"
+          fill="none"
+          stroke-linecap="round"
+          opacity="0.8"/>
+  </g>
+
+  <!-- Glass overlay for Liquid Glass effect -->
+  <rect width="1024" height="512" fill="url(#glassOverlay)"/>
+
+  <!-- Subtle highlight on central hub -->
+  <circle cx="502" cy="502" r="15" fill="#ffffff" opacity="0.4"/>
+</svg>
