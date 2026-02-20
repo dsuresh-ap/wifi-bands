@@ -399,7 +399,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 7V795ZVY5R;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -420,7 +420,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Wifi Bands";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WiFi Bands needs location permission to scan for WiFi networks and display their details.";
+				INFOPLIST_KEY_NSLocationUsageDescription = "WiFi Bands requires location access to scan and analyze WiFi networks in your area. macOS requires location permission to access WiFi network information including network names (SSIDs), signal strengths, channels, and band types (2.4GHz/5GHz/6GHz). This information is used to display network details, identify channel congestion, and provide recommendations for optimal WiFi performance.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -455,7 +455,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 2;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_TEAM = 7V795ZVY5R;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -476,7 +476,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Wifi Bands";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "WiFi Bands needs location permission to scan for WiFi networks and display their details.";
+				INFOPLIST_KEY_NSLocationUsageDescription = "WiFi Bands requires location access to scan and analyze WiFi networks in your area. macOS requires location permission to access WiFi network information including network names (SSIDs), signal strengths, channels, and band types (2.4GHz/5GHz/6GHz). This information is used to display network details, identify channel congestion, and provide recommendations for optimal WiFi performance.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",

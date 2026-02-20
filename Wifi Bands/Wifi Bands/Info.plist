@@ -3,6 +3,6 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocationUsageDescription</key>
-	<string>WiFi Bands needs location permission to scan for WiFi networks and display their details.</string>
+	<string>WiFi Bands requires location access to scan and analyze WiFi networks in your area. macOS requires location permission to access WiFi network information including network names (SSIDs), signal strengths, channels, and band types (2.4GHz/5GHz/6GHz). This information is used to display network details, identify channel congestion, and provide recommendations for optimal WiFi performance.</string>
 </dict>
 </plist>
